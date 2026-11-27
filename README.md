@@ -73,7 +73,9 @@ Use environment variables; keep secrets server-side. Production authentication r
 
 End, center and seed are deterministic inputs. A different historical configuration requires an explicit isolated demo reset. Reset deletes only demo-utility data, preserves the utility record and reseeds. Stop continuous simulation while evaluating controlled scenarios.
 
-OpenAI is optional for network inspection and exports. Without credentials the Copilot explains the required setup. No canned answers or invented meter results are supplied. The selected model's tool capability is checked during execution; the approved AI workflow adds a bounded capability probe. A full live factuality evaluation remains required before operational adoption.
+OpenAI is optional. Leave `OPENAI_API_KEY=` and `OPENAI_MODEL=` blank in `.env` (or `OpenAI__ApiKey` and `OpenAI__Model` for native development). Blank placeholders also appear in the API's appsettings.json. MeterMind runs normally: inventory, maps, profiles, diagnostics, simulation and Excel exports do not require an OpenAI key. Copilot shows “AI chat is paused” with links to meters and reports. Chat submissions return a clear 503 response before creating a conversation or contacting OpenAI. Keep the live AI workflow unused until you choose to configure a valid key later.
+
+No canned answers or invented meter results are supplied. When AI is connected, the selected model's tool capability is checked during execution; the approved AI workflow adds a bounded capability probe. A full live factuality evaluation remains required before operational adoption.
 
 ## Verify
 

@@ -424,7 +424,7 @@ export class App implements OnInit, OnDestroy {
     }
   }
   async send(text = this.prompt) {
-    if (!text.trim() || this.sending()) return;
+    if (!this.aiConfigured() || !text.trim() || this.sending()) return;
     this.prompt = '';
     this.sending.set(true);
     this.messages.update((x) => [

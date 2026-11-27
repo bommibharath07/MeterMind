@@ -7,7 +7,7 @@ using MeterMind.Application;
 using Microsoft.Extensions.Options;
 namespace MeterMind.AI;
 
-public sealed class OpenAiOptions { public string? ApiKey { get; set; } public string? Model { get; set; } public int MaxToolRounds { get; set; } = 5; public int MaxOutputTokens { get; set; } = 1500; }
+public sealed class OpenAiOptions { public string? ApiKey { get; set; } public string? Model { get; set; } public bool IsConfigured => !string.IsNullOrWhiteSpace(ApiKey) && !string.IsNullOrWhiteSpace(Model); public int MaxToolRounds { get; set; } = 5; public int MaxOutputTokens { get; set; } = 1500; }
 public record CopilotEvent(string Type, object Data);
 public sealed class ResponsesCopilot(HttpClient http, IOptions<OpenAiOptions> options, IToolDispatcher dispatcher)
 {
@@ -15,7 +15,7 @@ public sealed class ResponsesCopilot(HttpClient http, IOptions<OpenAiOptions> op
     public async IAsyncEnumerable<CopilotEvent> Stream(string message, IReadOnlyList<JsonNode>? history = null, [EnumeratorCancellation] CancellationToken ct = default)
     {
         var o = options.Value;
-        if (string.IsNullOrWhiteSpace(o.ApiKey) || string.IsNullOrWhiteSpace(o.Model)) throw new InvalidOperationException("OpenAI is not configured. Set the server-side OpenAI__ApiKey and OpenAI__Model.");
+        if (!o.IsConfigured) throw new InvalidOperationException("AI chat is not enabled. Network inspection and reports remain available. Configure OpenAI__ApiKey and OpenAI__Model to enable chat later.");
         if (message.Length is < 1 or > 8000) throw new ArgumentException("Message must be 1–8000 characters.");
         var input = new JsonArray(); if (history is not null) foreach (var h in history.TakeLast(20)) input.Add(h.DeepClone()); input.Add(JsonSerializer.SerializeToNode(new { role = "user", content = message }));
         var tools = ToolCatalog.Definitions(dispatcher.Names);

@@ -609,17 +609,19 @@
                 <p>Grounded in your utility’s database. Every tool call leaves an audit record.</p>
               </div>
               <span class="subtle-tag">{{
-                aiConfigured() ? 'Tools enabled' : 'Configuration required'
+                aiConfigured() ? 'Tools enabled' : 'Optional · Not connected'
               }}</span>
             </div>
             @if (!aiConfigured()) {
               <div class="setup-note">
-                <h3>Connect OpenAI to enable conversations</h3>
+                <h3>AI chat is paused</h3>
                 <p>
-                  Set the API key and a tool-capable model in the server configuration. You can
-                  explore actual network records using the inventory, diagnostics and report pages
-                  now.
+                  You can use MeterMind without an AI connection. Browse meters, investigate network
+                  health and download Excel reports now. Conversations will be available when AI is
+                  connected later.
                 </p>
+                <a mat-button routerLink="/meters">Browse meters</a>
+                <a mat-button routerLink="/reports">Open reports</a>
               </div>
             } @else {
               @if (messages().length === 0) {

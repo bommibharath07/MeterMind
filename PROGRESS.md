@@ -1,5 +1,12 @@
 # MeterMind implementation progress
 
+## Current configuration: AI optional (2026-11-27)
+- User confirmed no valid OpenAI key is available. Leave API key and model blank; live AI configuration/testing is deferred by request.
+- Copilot remains implemented with a paused notice and direct links to meter inventory and reports. Missing configuration returns HTTP 503 before any conversation is created or OpenAI is contacted; application authentication and ordinary network/report APIs remain active.
+- Verification: `METERMIND_FULL_SEED=1 dotnet test MeterMind.slnx -c Release --no-restore` against the existing isolated PostgreSQL database passed 27 tests; the opt-in live AI test was skipped. Blank-key API checks confirmed configured=false, normal demo authentication, six offline meters, HTTP 503 for chat, and no new conversation.
+- `npm ci`, `npm test` (3 passed), and `npm run build` passed. Windows compiler locks required stopping the local Angular process before restore. All five browser acceptance checks passed: two on the first run and three via `--last-failed` after the restarted UI became ready; those three initially encountered connection refused during startup. Checks cover the paused AI notice, inventory, profiles, map/topology, mobile layout, and genuine Excel downloads. The configured-chat export test still uses a mocked OpenAI stream.
+- Local API and UI were restarted with blank AI configuration and respond at http://127.0.0.1:5080 and http://127.0.0.1:4200. No live OpenAI request or GitHub AI workflow was run for this change.
+
 Status is evidence-based. A checkbox denotes implementation and its recorded local checks, not production certification.
 
 ## Phases

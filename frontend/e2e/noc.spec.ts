@@ -21,8 +21,11 @@ test('database dashboard, all nodes, filtering and profile navigation', async ({
   await expect(page.getByRole('columnheader', { name: 'Event code' })).toBeVisible();
   await page.getByRole('link', { name: '✧ AI Copilot AI' }).click();
   await expect(
-    page.getByRole('heading', { name: 'Connect OpenAI to enable conversations' }),
+    page.getByRole('heading', { name: 'AI chat is paused' }),
   ).toBeVisible();
+  await expect(page.getByRole('textbox', { name: 'Ask MeterMind' })).toHaveCount(0);
+  await page.getByRole('link', { name: 'Open reports', exact: true }).click();
+  await expect(page.locator('.report-actions')).toBeVisible();
   expect(errors).toEqual([]);
 });
 test('responsive navigation remains usable', async ({ page }) => {
