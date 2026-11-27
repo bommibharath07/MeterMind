@@ -41,7 +41,7 @@ public class AcceptanceTests
             await service.Scenario("MM-0012","congestion");await service.Scenario("MM-0012","congestion");
             Assert.Contains((await network.Diagnose("MM-0012")).Findings,f=>f.Rule=="congestion");
             await service.SetRunning(true);var before=await db.Telemetry.LongCountAsync();await service.Tick();Assert.Equal(before+300,await db.Telemetry.LongCountAsync());
-            await service.SetRunning(false);await transaction.RollbackAsync();db.ChangeTracker.Clear();
+            await service.SetRunning(false);await service.Tick();Assert.Equal(before+300,await db.Telemetry.LongCountAsync());await transaction.RollbackAsync();db.ChangeTracker.Clear();
         }
         Console.WriteLine($"ACCEPTANCE baseline={expected}; seed_seconds={seedSeconds:F2}; summary_ms={summaryMs:F2}; weak_records={actual.Count}; profiles=10; idempotency=true; isolation=true; export_exact=true; scenarios=true; continuous_tick=true");
     }

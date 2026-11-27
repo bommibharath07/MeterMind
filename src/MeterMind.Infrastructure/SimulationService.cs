@@ -12,7 +12,7 @@ public sealed class SimulationService(MeterDb db, ITenantContext tenant, IConfig
 {
     void Guard() { if (!tenant.CanOperate || tenant.UtilityId != Demo.UtilityId || !config.GetValue<bool>("Simulation:Enabled")) throw new UnauthorizedAccessException("Simulation control is restricted to the isolated demo utility."); }
     public async Task<object> Status(CancellationToken ct = default) => await db.Simulations.AsNoTracking().SingleOrDefaultAsync(ct) ?? throw new KeyNotFoundException("Seed this demo first.");
-    public async Task SetRunning(bool value, CancellationToken ct = default) { Guard(); await db.Simulations.ExecuteUpdateAsync(s => s.SetProperty(x => x.Running, value), ct); await Audit(value ? "start" : "stop", ct); }
+    public async Task SetRunning(bool value, CancellationToken ct = default) { Guard(); var simulation = await db.Simulations.SingleAsync(ct); simulation.Running = value; await Audit(value ? "start" : "stop", ct); }
     public async Task Reset(CancellationToken ct = default)
     {
         Guard(); await using var tx = await db.Database.BeginTransactionAsync(ct); await db.Database.ExecuteSqlRawAsync("SELECT pg_advisory_xact_lock(714300)", ct);
