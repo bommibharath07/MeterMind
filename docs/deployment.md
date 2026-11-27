@@ -2,7 +2,7 @@
 
 ## External setup
 
-The private GitHub repository is connected. No Azure subscription, valid OpenAI key, production identity tenant or physical devices are configured. Local builds, database tests and template compilation are not deployment evidence. Container builds cannot be executed on the implementation host because Docker is unavailable.
+The public GitHub repository https://github.com/bommibharath07/MeterMind is connected. Visibility was changed from private to public at the user's request to support GitHub code scanning. No Azure subscription, valid OpenAI key, production identity tenant or physical devices are configured. Local builds, database tests and template compilation are not deployment evidence. Container builds cannot be executed on the implementation host because Docker is unavailable.
 
 1. Push this repository to your GitHub account. Protect main/master and configure GitHub Environments `staging`, `production` and `ai-evaluation`. Require reviewers for production and trusted live AI evaluation, and restrict deployment branches. These GitHub account settings cannot be enforced solely by YAML.
 2. Establish federated GitHub OIDC identities for each environment. Grant only the required resource-group deployment privileges, managed-identity role-assignment rights, ACR push/import rights and cloud-job execution rights. Scope production separately. Do not create long-lived Azure client secrets.
