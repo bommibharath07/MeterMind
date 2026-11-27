@@ -1,0 +1,16 @@
+**/bin/
+**/obj/
+**/TestResults/
+**/node_modules/
+**/dist/
+**/.angular/
+.tools/
+.local/
+artifacts/
+test-results/
+playwright-report/
+.playwright-mcp/
+.env
+*.user
+*.log
+__pycache__/

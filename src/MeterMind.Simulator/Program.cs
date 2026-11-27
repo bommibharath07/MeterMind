@@ -1,0 +1,10 @@
+using MeterMind.Domain;
+using MeterMind.Persistence;
+using MeterMind.Simulator;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+var config = new ConfigurationBuilder().AddEnvironmentVariables().AddCommandLine(args).Build();
+var options = new SimulationOptions(); config.GetSection("Simulation").Bind(options);
+await using var db = new MeterDb(new DbContextOptionsBuilder<MeterDb>().UseNpgsql(config.GetConnectionString("MeterDb") ?? throw new InvalidOperationException("ConnectionStrings__MeterDb required")).Options, new FixedTenant(Demo.UtilityId));
+await new HistoricalSeeder(db).Seed(options);
+Console.WriteLine($"Seed complete: {await db.Meters.CountAsync()} meters; {await db.Telemetry.LongCountAsync() + await db.Readings.LongCountAsync()} baseline records.");

@@ -1,0 +1,48 @@
+using System.ComponentModel;
+using System.Text.Json;
+using MeterMind.Application;
+using ModelContextProtocol.Server;
+namespace MeterMind.McpServer;
+
+[McpServerToolType]
+public sealed class MeterTools(IToolDispatcher dispatcher)
+{
+    [McpServerTool(Name = "get_network_summary"), Description("Utility-scoped get_network_summary; JSON arguments use meterId, search, rssiBelow, from, to, profile, gatewayId, sectorId, limit, description. No utility ID or SQL allowed.")]
+    public Task<object> GetNetworkSummary([Description("Validated JSON argument object")] string argumentsJson = "{}", CancellationToken ct = default) => dispatcher.Execute("get_network_summary", JsonSerializer.Deserialize<JsonElement>(argumentsJson), ct);
+    [McpServerTool(Name = "search_meters"), Description("Utility-scoped search_meters; JSON arguments use meterId, search, rssiBelow, from, to, profile, gatewayId, sectorId, limit, description. No utility ID or SQL allowed.")]
+    public Task<object> SearchMeters([Description("Validated JSON argument object")] string argumentsJson = "{}", CancellationToken ct = default) => dispatcher.Execute("search_meters", JsonSerializer.Deserialize<JsonElement>(argumentsJson), ct);
+    [McpServerTool(Name = "get_meter_details"), Description("Utility-scoped get_meter_details; JSON arguments use meterId, search, rssiBelow, from, to, profile, gatewayId, sectorId, limit, description. No utility ID or SQL allowed.")]
+    public Task<object> GetMeterDetails([Description("Validated JSON argument object")] string argumentsJson = "{}", CancellationToken ct = default) => dispatcher.Execute("get_meter_details", JsonSerializer.Deserialize<JsonElement>(argumentsJson), ct);
+    [McpServerTool(Name = "get_weak_signal_meters"), Description("Utility-scoped get_weak_signal_meters; JSON arguments use meterId, search, rssiBelow, from, to, profile, gatewayId, sectorId, limit, description. No utility ID or SQL allowed.")]
+    public Task<object> GetWeakSignalMeters([Description("Validated JSON argument object")] string argumentsJson = "{}", CancellationToken ct = default) => dispatcher.Execute("get_weak_signal_meters", JsonSerializer.Deserialize<JsonElement>(argumentsJson), ct);
+    [McpServerTool(Name = "get_offline_meters"), Description("Utility-scoped get_offline_meters; JSON arguments use meterId, search, rssiBelow, from, to, profile, gatewayId, sectorId, limit, description. No utility ID or SQL allowed.")]
+    public Task<object> GetOfflineMeters([Description("Validated JSON argument object")] string argumentsJson = "{}", CancellationToken ct = default) => dispatcher.Execute("get_offline_meters", JsonSerializer.Deserialize<JsonElement>(argumentsJson), ct);
+    [McpServerTool(Name = "get_meter_neighbors"), Description("Utility-scoped get_meter_neighbors; JSON arguments use meterId, search, rssiBelow, from, to, profile, gatewayId, sectorId, limit, description. No utility ID or SQL allowed.")]
+    public Task<object> GetMeterNeighbors([Description("Validated JSON argument object")] string argumentsJson = "{}", CancellationToken ct = default) => dispatcher.Execute("get_meter_neighbors", JsonSerializer.Deserialize<JsonElement>(argumentsJson), ct);
+    [McpServerTool(Name = "get_mesh_topology"), Description("Utility-scoped get_mesh_topology; JSON arguments use meterId, search, rssiBelow, from, to, profile, gatewayId, sectorId, limit, description. No utility ID or SQL allowed.")]
+    public Task<object> GetMeshTopology([Description("Validated JSON argument object")] string argumentsJson = "{}", CancellationToken ct = default) => dispatcher.Execute("get_mesh_topology", JsonSerializer.Deserialize<JsonElement>(argumentsJson), ct);
+    [McpServerTool(Name = "get_routing_history"), Description("Utility-scoped get_routing_history; JSON arguments use meterId, search, rssiBelow, from, to, profile, gatewayId, sectorId, limit, description. No utility ID or SQL allowed.")]
+    public Task<object> GetRoutingHistory([Description("Validated JSON argument object")] string argumentsJson = "{}", CancellationToken ct = default) => dispatcher.Execute("get_routing_history", JsonSerializer.Deserialize<JsonElement>(argumentsJson), ct);
+    [McpServerTool(Name = "get_dlms_profile"), Description("Utility-scoped get_dlms_profile; JSON arguments use meterId, search, rssiBelow, from, to, profile, gatewayId, sectorId, limit, description. No utility ID or SQL allowed.")]
+    public Task<object> GetDlmsProfile([Description("Validated JSON argument object")] string argumentsJson = "{}", CancellationToken ct = default) => dispatcher.Execute("get_dlms_profile", JsonSerializer.Deserialize<JsonElement>(argumentsJson), ct);
+    [McpServerTool(Name = "get_meter_events"), Description("Utility-scoped get_meter_events; JSON arguments use meterId, search, rssiBelow, from, to, profile, gatewayId, sectorId, limit, description. No utility ID or SQL allowed.")]
+    public Task<object> GetMeterEvents([Description("Validated JSON argument object")] string argumentsJson = "{}", CancellationToken ct = default) => dispatcher.Execute("get_meter_events", JsonSerializer.Deserialize<JsonElement>(argumentsJson), ct);
+    [McpServerTool(Name = "compare_meter_health"), Description("Utility-scoped compare_meter_health; JSON arguments use meterId, search, rssiBelow, from, to, profile, gatewayId, sectorId, limit, description. No utility ID or SQL allowed.")]
+    public Task<object> CompareMeterHealth([Description("Validated JSON argument object")] string argumentsJson = "{}", CancellationToken ct = default) => dispatcher.Execute("compare_meter_health", JsonSerializer.Deserialize<JsonElement>(argumentsJson), ct);
+    [McpServerTool(Name = "get_gateway_health"), Description("Utility-scoped get_gateway_health; JSON arguments use meterId, search, rssiBelow, from, to, profile, gatewayId, sectorId, limit, description. No utility ID or SQL allowed.")]
+    public Task<object> GetGatewayHealth([Description("Validated JSON argument object")] string argumentsJson = "{}", CancellationToken ct = default) => dispatcher.Execute("get_gateway_health", JsonSerializer.Deserialize<JsonElement>(argumentsJson), ct);
+    [McpServerTool(Name = "find_affected_nodes"), Description("Utility-scoped find_affected_nodes; JSON arguments use meterId, search, rssiBelow, from, to, profile, gatewayId, sectorId, limit, description. No utility ID or SQL allowed.")]
+    public Task<object> FindAffectedNodes([Description("Validated JSON argument object")] string argumentsJson = "{}", CancellationToken ct = default) => dispatcher.Execute("find_affected_nodes", JsonSerializer.Deserialize<JsonElement>(argumentsJson), ct);
+    [McpServerTool(Name = "diagnose_meter_failure"), Description("Utility-scoped diagnose_meter_failure; JSON arguments use meterId, search, rssiBelow, from, to, profile, gatewayId, sectorId, limit, description. No utility ID or SQL allowed.")]
+    public Task<object> DiagnoseMeterFailure([Description("Validated JSON argument object")] string argumentsJson = "{}", CancellationToken ct = default) => dispatcher.Execute("diagnose_meter_failure", JsonSerializer.Deserialize<JsonElement>(argumentsJson), ct);
+    [McpServerTool(Name = "predict_network_risk"), Description("Utility-scoped predict_network_risk; JSON arguments use meterId, search, rssiBelow, from, to, profile, gatewayId, sectorId, limit, description. No utility ID or SQL allowed.")]
+    public Task<object> PredictNetworkRisk([Description("Validated JSON argument object")] string argumentsJson = "{}", CancellationToken ct = default) => dispatcher.Execute("predict_network_risk", JsonSerializer.Deserialize<JsonElement>(argumentsJson), ct);
+    [McpServerTool(Name = "generate_excel_report"), Description("Utility-scoped generate_excel_report; JSON arguments use meterId, search, rssiBelow, from, to, profile, gatewayId, sectorId, limit, description. No utility ID or SQL allowed.")]
+    public Task<object> GenerateExcelReport([Description("Validated JSON argument object")] string argumentsJson = "{}", CancellationToken ct = default) => dispatcher.Execute("generate_excel_report", JsonSerializer.Deserialize<JsonElement>(argumentsJson), ct);
+    [McpServerTool(Name = "generate_csv_report"), Description("Utility-scoped generate_csv_report; JSON arguments use meterId, search, rssiBelow, from, to, profile, gatewayId, sectorId, limit, description. No utility ID or SQL allowed.")]
+    public Task<object> GenerateCsvReport([Description("Validated JSON argument object")] string argumentsJson = "{}", CancellationToken ct = default) => dispatcher.Execute("generate_csv_report", JsonSerializer.Deserialize<JsonElement>(argumentsJson), ct);
+    [McpServerTool(Name = "generate_text_report"), Description("Utility-scoped generate_text_report; JSON arguments use meterId, search, rssiBelow, from, to, profile, gatewayId, sectorId, limit, description. No utility ID or SQL allowed.")]
+    public Task<object> GenerateTextReport([Description("Validated JSON argument object")] string argumentsJson = "{}", CancellationToken ct = default) => dispatcher.Execute("generate_text_report", JsonSerializer.Deserialize<JsonElement>(argumentsJson), ct);
+    [McpServerTool(Name = "propose_work_order"), Description("Utility-scoped propose_work_order; JSON arguments use meterId, search, rssiBelow, from, to, profile, gatewayId, sectorId, limit, description. No utility ID or SQL allowed.")]
+    public Task<object> ProposeWorkOrder([Description("Validated JSON argument object")] string argumentsJson = "{}", CancellationToken ct = default) => dispatcher.Execute("propose_work_order", JsonSerializer.Deserialize<JsonElement>(argumentsJson), ct);
+}
