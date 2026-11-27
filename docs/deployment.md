@@ -2,7 +2,7 @@
 
 ## External setup
 
-No Azure subscription, GitHub remote, OpenAI key, production identity tenant or physical devices were supplied. Local builds, database tests and template compilation are not deployment evidence. Container builds cannot be executed on the implementation host because Docker is unavailable.
+The private GitHub repository is connected. No Azure subscription, valid OpenAI key, production identity tenant or physical devices are configured. Local builds, database tests and template compilation are not deployment evidence. Container builds cannot be executed on the implementation host because Docker is unavailable.
 
 1. Push this repository to your GitHub account. Protect main/master and configure GitHub Environments `staging`, `production` and `ai-evaluation`. Require reviewers for production and trusted live AI evaluation, and restrict deployment branches. These GitHub account settings cannot be enforced solely by YAML.
 2. Establish federated GitHub OIDC identities for each environment. Grant only the required resource-group deployment privileges, managed-identity role-assignment rights, ACR push/import rights and cloud-job execution rights. Scope production separately. Do not create long-lived Azure client secrets.
@@ -28,7 +28,7 @@ Migration, seed, infrastructure, rollout and rollback workflows share an environ
 
 `backup-verification.yml` performs an Azure point-in-time restore to a uniquely named disposable server, queries the restored schema/data, creates a logical dump, verifies its archive listing and stores it in private Blob Storage. Cleanup deletes only that temporary restore. Actual restore execution, archive download and recovery-time objectives require cloud validation.
 
-`ai-evaluation.yml` runs mocked tests and one trusted live tool-capability probe, capped at 300 output tokens. Apply account/project spending limits in OpenAI as an additional usage control. This is a capability smoke test, not a full evaluation of root-cause accuracy or resistance to prompt injection.
+`ai-evaluation.yml` runs mocked tests and one trusted live tool-capability probe, capped at 300 output tokens, followed by a two-turn offline-meter conversation and exact XLSX row comparison. The conversation has at most three tool rounds and 1,000 output tokens per request; no live test runs on ordinary PR builds. Apply account/project spending limits in OpenAI as an additional usage control. This is a capability smoke test, not a full evaluation of root-cause accuracy or resistance to prompt injection.
 
 ## Database and extension operations
 

@@ -102,3 +102,9 @@ The default record count is 300 × (8,640 telemetry + 2,880 instantaneous + 1,44
 - [Idempotent SQL artifact](docs/sql/migrations.sql)
 
 The 12 requested GitHub workflows and two reusable workflows are in .github/workflows. Remote actions are pinned to verified full commit SHAs. CI uses locked restores, isolated PostgreSQL, mocked AI and browser checks. Cloud jobs use GitHub OIDC and a private-network runner; production promotion compares the exact staging-tested manifest and preserves image digests. No cloud success is implied by local template validation.
+
+## Live Copilot acceptance
+
+Save a valid key as the repository Actions secret OPENAI_API_KEY. Set the OPENAI_MODEL repository variable if you want to override gpt-4.1-mini. Run the Trusted live AI evaluation workflow on main: it lists actual offline meters, follows up with an Excel request, and compares every workbook serial with PostgreSQL. A successful run uploads offline-meters.xlsx and result.json. This manual workflow performs bounded, billable OpenAI calls; ordinary CI does not.
+
+For a local session, run python scripts/openai-session.py and enter the key at its hidden prompt. The helper validates the credential and holds it only in the API process environment. GitHub cannot reveal a saved Actions secret to the local application.
