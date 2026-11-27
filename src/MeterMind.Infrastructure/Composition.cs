@@ -41,6 +41,8 @@ public static class Composition
         s.AddOptions<OpenAiOptions>().Bind(config.GetSection("OpenAI")).Validate(o => o.MaxToolRounds is >= 1 and <= 8 && o.MaxOutputTokens is >= 200 and <= 4000, "Invalid OpenAI usage limits").ValidateOnStart(); s.AddScoped<IDlmsAdapter, SimulatedDlmsAdapter>();
         s.AddOpenTelemetry().ConfigureResource(r => r.AddService("MeterMind")).WithTracing(t => { t.AddAspNetCoreInstrumentation(); if (!string.IsNullOrEmpty(config["OTEL_EXPORTER_OTLP_ENDPOINT"])) t.AddOtlpExporter(); });
         if (!string.IsNullOrWhiteSpace(config["APPLICATIONINSIGHTS_CONNECTION_STRING"])) s.AddOpenTelemetry().UseAzureMonitor(o => o.ConnectionString = config["APPLICATIONINSIGHTS_CONNECTION_STRING"]);
+        // Generic worker hosts have a fixed trusted utility and no HTTP authorization pipeline.
+        if(workerUtility is not null)return s;
         if (development && config.GetValue<bool>("DemoAuth"))
         {
             var key = new DemoSigningKey(); s.AddSingleton(key);

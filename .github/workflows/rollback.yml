@@ -29,4 +29,5 @@ jobs:
           MM_ENVIRONMENT: ${{ inputs.environment }}
           MM_RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
           MM_SMOKE_TOKEN: ${{ secrets.SMOKE_ACCESS_TOKEN }}
+          MM_SOURCE_ACR_ID: ${{ vars.SOURCE_ACR_RESOURCE_ID }}
         run: bash scripts/rollback.sh

@@ -145,7 +145,7 @@ resource api 'Microsoft.App/containerApps@2024-03-01' = if(deployServices) {
   properties: {
     managedEnvironmentId: environmentResource.id
     configuration: { activeRevisionsMode: 'Single', ingress: { external: false, targetPort: 8080, allowInsecure: false, transport: 'auto' }, registries: [{ server: registry.properties.loginServer, identity: identity.id }], secrets: [{ name: 'database-connection', keyVaultUrl: dbSecret.properties.secretUri, identity: identity.id },{ name: 'openai-key', keyVaultUrl: aiSecret.properties.secretUri, identity: identity.id }] }
-    template: { containers: [{ name: 'api', image: images.api, env: concat(commonEnvironment,[{ name: 'OpenAI__Model', value: openAiModel },{ name: 'OpenAI__ApiKey', secretRef: 'openai-key' }]), resources: { cpu: 1, memory: '2Gi' }, probes: [{ type: 'Liveness', httpGet: { path: '/health/live', port: 8080 }, initialDelaySeconds: 15 },{ type: 'Readiness', httpGet: { path: '/health/ready', port: 8080 }, initialDelaySeconds: 10 }] }], scale: { minReplicas: 1, maxReplicas: 1 } }
+    template: { containers: [{ name: 'api', image: images.api, env: concat(commonEnvironment,[{ name: 'OpenAI__Model', value: openAiModel },empty(openAiApiKey) ? { name: 'OpenAI__ApiKey', value: '' } : { name: 'OpenAI__ApiKey', secretRef: 'openai-key' }]), resources: { cpu: 1, memory: '2Gi' }, probes: [{ type: 'Liveness', httpGet: { path: '/health/live', port: 8080 }, initialDelaySeconds: 15 },{ type: 'Readiness', httpGet: { path: '/health/ready', port: 8080 }, initialDelaySeconds: 10 }] }], scale: { minReplicas: 1, maxReplicas: 1 } }
   }
   dependsOn: [registryPull,secretsReader,zoneGroups]
 }
