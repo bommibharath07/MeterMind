@@ -40,3 +40,11 @@ Status is evidence-based. A checkbox denotes implementation and its recorded loc
 - No Azure credentials, production identity configuration, OpenAI API key, meter/HES access, or licensed companion specifications supplied.
 - Physical protocol interoperability and regulatory compliance require vendor-specific validation.
 - Deployment success will only be marked after actual staging and smoke-test evidence.
+
+## Copilot offline-to-Excel follow-up
+- Created private repository https://github.com/bommibharath07/MeterMind and pushed source to main.
+- Supplied credential was rejected by OpenAI with HTTP 401 invalid_api_key; no successful live-model test is claimed. A replacement OPENAI_API_KEY Actions secret is required. No credential was written to source or artifacts.
+- Actual offline query returns six meters: MM-0295 through MM-0300.
+- Added direct report readiness/download card to Copilot, explicit export-filter instructions, sanitized credential errors and an opt-in two-turn live conversation/XLSX acceptance workflow.
+- Local regression: 27 backend tests passed with the one opt-in live test skipped; three frontend tests and five browser tests passed. The new UI test uses actual database/report APIs and a mocked OpenAI stream.
+- First remote CI exposed Docker health-command quoting and cross-workflow concurrency issues; corrected both. Remote rerun verification is recorded separately.

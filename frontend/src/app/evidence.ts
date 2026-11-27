@@ -1,12 +1,12 @@
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
 import { Chart } from './chart';
 import { MeterView, Finding, Summary } from './types';
+import {ReportDownload} from './report-download';
 @Component({
   selector: 'mm-evidence',
   standalone: true,
-  imports: [CommonModule, RouterLink, Chart],
+  imports: [CommonModule, Chart,ReportDownload],
   template: `
     <section class="evidence">
       <header>
@@ -59,8 +59,7 @@ import { MeterView, Finding, Summary } from './types';
         </article>
       }
       @if (reportId()) {
-        <p>Report queued: {{ reportId() }}</p>
-        <a routerLink="/reports">Open Reports center to download</a>
+        <mm-report-download [reportId]="reportId()!" [format]="name==='generate_csv_report'?'csv':name==='generate_text_report'?'txt':'xlsx'"/>
       }
       <details>
         <summary>Inspect complete tool result</summary>

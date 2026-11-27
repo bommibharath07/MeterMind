@@ -7,7 +7,18 @@ jobs:
   evaluate:
     runs-on: ubuntu-latest
     environment: ai-evaluation
-    timeout-minutes: 10
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:18.1
+        env:
+          POSTGRES_DB: metermind_live_test
+          POSTGRES_USER: metermind
+          POSTGRES_PASSWORD: live-test-only-password
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U metermind -d metermind_live_test"
+          --health-interval 5s --health-retries 20
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       - uses: ./.github/actions/setup
@@ -15,5 +26,18 @@ jobs:
       - name: Bounded Responses API tool capability probe
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          OPENAI_MODEL: ${{ vars.OPENAI_MODEL }}
+          OPENAI_MODEL: ${{ vars.OPENAI_MODEL || 'gpt-4.1-mini' }}
         run: python scripts/live-ai-evaluation.py
+      - name: Live offline-meter conversation and exact Excel acceptance
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_MODEL: ${{ vars.OPENAI_MODEL || 'gpt-4.1-mini' }}
+          METERMIND_RUN_LIVE_AI: '1'
+          METERMIND_TEST_CONNECTION: Host=127.0.0.1;Database=metermind_live_test;Username=metermind;Password=live-test-only-password
+          METERMIND_LIVE_EVIDENCE_PATH: ${{ github.workspace }}/artifacts/live-ai
+        run: dotnet test tests/MeterMind.Integration.Tests --filter FullyQualifiedName~LiveCopilotTests --logger 'trx;LogFileName=live-ai.trx'
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: success()
+        with:
+          name: live-offline-excel-evidence
+          path: artifacts/live-ai/
