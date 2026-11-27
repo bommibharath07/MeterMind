@@ -1,0 +1,911 @@
+<div class="shell" [class.collapsed]="collapsed()">
+  <aside class="sidebar">
+    <a class="brand" routerLink="/overview"
+      ><span class="brand-mark"
+        ><svg viewBox="0 0 32 32"><path d="M4 23V10l6 7 6-12 6 12 6-7v13" /></svg></span
+      ><span>Meter<span class="brand-light">Mind</span><small>Network intelligence</small></span></a
+    >
+    <div class="workspace">
+      <span class="workspace-icon">B</span>
+      <div>Bengaluru utility<small>Central RF mesh network</small></div>
+      <span>⌄</span>
+    </div>
+    <nav aria-label="Main navigation">
+      @for (item of nav; track item.path) {
+        @if (item.group) {
+          <p class="nav-group">{{ item.group }}</p>
+        }
+        <a [routerLink]="'/' + item.path" [class.active]="view() === item.path"
+          ><span class="nav-icon">{{ item.icon }}</span
+          ><span>{{ item.label }}</span>
+          @if (item.path === 'alerts' && summary()?.openIncidents) {
+            <b class="nav-count">{{ summary()?.openIncidents }}</b>
+          }
+          @if (item.path === 'copilot') {
+            <span class="new-tag">AI</span>
+          }
+        </a>
+      }
+    </nav>
+    <div class="sidebar-bottom">
+      <span class="connection-dot"></span
+      ><span
+        >{{ connected() ? 'Backend connected' : 'Connecting to backend'
+        }}<small>Simulation environment</small></span
+      >
+    </div>
+  </aside>
+  <div class="main">
+    <header class="topbar">
+      <div class="breadcrumb">
+        <button
+          class="icon-button"
+          aria-label="Toggle navigation"
+          (click)="collapsed.set(!collapsed())"
+        >
+          ☰</button
+        ><span>Workspace</span><span class="crumb-divider">/</span><b>{{ title() }}</b>
+      </div>
+      <div class="top-actions">
+        <span class="simulation-pill"><i></i> Simulation mode</span
+        ><button class="icon-button" aria-label="Network alerts" routerLink="/alerts">♧</button
+        ><span class="avatar">BU</span>
+        <div class="user">Utility operator<small>Network operations</small></div>
+      </div>
+    </header>
+    <div class="simulation-banner">
+      <span><b>Simulation environment</b> · All readings and network behavior are synthetic.</span
+      ><span>Data clock: {{ summary()?.dataTime | date: 'dd MMM yyyy, HH:mm' : 'UTC' }} UTC</span>
+    </div>
+    <main>
+      <div class="page-heading">
+        <div>
+          <div class="context-label">
+            Central RF mesh network <span class="context-dot"></span> Bengaluru, India
+          </div>
+          <h1>{{ title() }}</h1>
+          <p>
+            {{
+              view() === 'overview'
+                ? 'A clear view of your network. From the mesh to the meter.'
+                : view() === 'copilot'
+                  ? 'Ask questions. Investigate with evidence. Act with confidence.'
+                  : 'Monitor, investigate and manage your smart meter network.'
+            }}
+          </p>
+        </div>
+        <div class="heading-actions">
+          <button class="secondary" (click)="initialize()">↻ Refresh</button
+          ><button mat-flat-button (click)="export()">↥ Export report</button>
+        </div>
+      </div>
+      @if (error()) {
+        <div class="message error" role="alert">
+          {{ error() }} <button (click)="error.set('')" aria-label="Dismiss error">×</button>
+        </div>
+      }
+      @if (notice()) {
+        <div class="message success" role="status">
+          {{ notice() }}
+          <button (click)="notice.set('')" aria-label="Dismiss notification">×</button>
+        </div>
+      }
+      @if (loading()) {
+        <div class="loading" role="status">
+          <span class="spinner"></span> Loading network records…
+        </div>
+      }
+      @if (!connected() && !loading()) {
+        <section class="panel connect-panel">
+          <h2>Connect to MeterMind</h2>
+          <p>
+            Start the database, migrations and API using the README. For a configured identity
+            provider, enter a valid access token.
+          </p>
+          <label
+            >Access token<input
+              [(ngModel)]="tokenInput"
+              type="password"
+              autocomplete="off" /></label
+          ><button mat-flat-button (click)="signIn()">Sign in</button
+          ><button class="secondary" (click)="openDemo()">Open local demo</button>
+        </section>
+      }
+      @if (connected() && summary(); as s) {
+        @if (view() === 'overview') {
+          <div class="metric-grid">
+            <section class="metric">
+              <div>Total meters<span class="metric-icon">▦</span></div>
+              <strong>{{ s.total | number }}</strong
+              ><small
+                >{{ s.gateways }} gateways <span>·</span> {{ s.sinks }} sinks <span>·</span> RF
+                mesh</small
+              >
+            </section>
+            <section class="metric">
+              <div>Online meters<span class="metric-icon healthy">◉</span></div>
+              <strong
+                >{{ s.states['online'] || 0 }}<em>/ {{ s.total }}</em></strong
+              ><small class="healthy"
+                >{{ percent((s.states['online'] || 0) / s.total) }} of the network</small
+              >
+            </section>
+            <section class="metric">
+              <div>Meter read success<span class="metric-icon">≋</span></div>
+              <strong>{{ percent(s.averageReadSuccess) }}</strong
+              ><small>Latest observed collection health</small>
+            </section>
+            <section class="metric">
+              <div>Needs attention<span class="metric-icon warning">△</span></div>
+              <strong>{{ s.weakSignal + (s.states['offline'] || 0) }}<em>indicators</em></strong
+              ><small
+                ><span class="warning">{{ s.weakSignal }} weak signal</span> <span>·</span>
+                {{ s.states['offline'] || 0 }} offline</small
+              >
+            </section>
+          </div>
+          <div class="overview-grid">
+            <section class="panel map-panel">
+              <div class="panel-heading">
+                <div>
+                  <h2>Network at a glance</h2>
+                  <p>Observed routes across your deployment</p>
+                </div>
+                <a routerLink="/map">Open network map ↗</a>
+              </div>
+              <mm-network [data]="topology()" (selected)="select($event)" />
+              <footer class="panel-footer">
+                <span class="connection-dot"></span>{{ s.total }} meters displayed
+                <span class="spacer"></span>{{ s.gateways }} gateways configured
+              </footer>
+            </section>
+            <div class="right-stack">
+              <section class="panel">
+                <div class="panel-heading">
+                  <div>
+                    <h2>Communication health</h2>
+                    <p>Last 24 hours, simulation clock</p>
+                  </div>
+                  <span class="subtle-tag">24 h</span>
+                </div>
+                <mm-chart [data]="s.trend" />
+              </section>
+              <section class="panel insight-panel">
+                <div class="insight-icon">✧</div>
+                <div>
+                  <h2>A closer look, one question away</h2>
+                  <p>
+                    Investigate weak signals, trace routes and export evidence with your AI Copilot.
+                  </p>
+                  <a routerLink="/copilot">Open AI Copilot ↗</a>
+                </div>
+              </section>
+              <section class="panel status-panel">
+                <h2>Network status</h2>
+                @for (
+                  statusName of ['online', 'degraded', 'offline', 'unknown'];
+                  track statusName
+                ) {
+                  <div>
+                    <span><i [class]="'dot ' + statusName"></i>{{ statusName | titlecase }}</span
+                    ><b>{{ s.states[statusName] || 0 }}</b>
+                    <div class="bar">
+                      <i
+                        [class]="statusName"
+                        [style.width.%]="
+                          s.total > 0 ? ((s.states[statusName] || 0) / s.total) * 100 : 0
+                        "
+                      ></i>
+                    </div>
+                  </div>
+                }
+              </section>
+            </div>
+          </div>
+          <section class="panel">
+            <div class="panel-heading">
+              <div>
+                <h2>Priority incidents</h2>
+                <p>Open issues requiring investigation</p>
+              </div>
+              <a routerLink="/incidents">View all incidents ↗</a>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Incident</th>
+                    <th>Severity</th>
+                    <th>Status</th>
+                    <th>Detected at (UTC)</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (i of incidents().slice(0, 5); track i.id) {
+                    <tr>
+                      <td class="strong">{{ i.title }}</td>
+                      <td>
+                        <span [class]="'badge ' + i.severity">{{ i.severity }}</span>
+                      </td>
+                      <td>{{ i.status }}</td>
+                      <td>{{ i.timestamp | date: 'dd MMM, HH:mm' : 'UTC' }}</td>
+                      <td><a routerLink="/incidents">Investigate</a></td>
+                    </tr>
+                  } @empty {
+                    <tr>
+                      <td colspan="5" class="empty">No incidents recorded.</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </section>
+        }
+        @if (view() === 'map' || view() === 'topology') {
+          <section class="panel">
+            <div class="panel-heading">
+              <div>
+                <h2>
+                  {{ view() === 'map' ? 'Geographical RF mesh' : 'Logical routing topology' }}
+                </h2>
+                <p>
+                  Routes and potential neighbor links are separate. Playback shows routing history.
+                </p>
+              </div>
+              <label
+                >Playback (UTC)<input
+                  type="datetime-local"
+                  [(ngModel)]="playback"
+                  (change)="playbackAt()"
+              /></label>
+            </div>
+            <div class="filters">
+              <input
+                aria-label="Search network map"
+                placeholder="Find a meter…"
+                [ngModel]="mapQuery()"
+                (ngModelChange)="mapQuery.set($event)"
+              /><select
+                aria-label="Map sector"
+                [ngModel]="mapSector()"
+                (ngModelChange)="mapSector.set($event)"
+              >
+                <option value="">All sectors</option>
+                @for (sc of catalog().sectors; track sc.id) {
+                  <option [value]="sc.id">{{ sc.name }}</option>
+                }</select
+              ><span class="muted"
+                >{{ mapTopology()?.meters?.length }} meters visible. Links to hidden nodes are
+                omitted.</span
+              >
+            </div>
+            <mm-network
+              [data]="mapTopology()"
+              [logical]="view() === 'topology'"
+              (selected)="select($event)"
+            />
+            <footer class="panel-footer">
+              {{ topology()?.meters?.length }} meters · Routes at
+              {{ topology()?.at | date: 'medium' : 'UTC' }} UTC
+            </footer>
+          </section>
+        }
+        @if (view() === 'meters' || view() === 'alerts') {
+          <section class="panel">
+            <div class="panel-heading">
+              <div>
+                <h2>{{ view() === 'meters' ? 'Meter inventory' : 'Network attention queue' }}</h2>
+                <p>{{ meters().length }} database records loaded</p>
+              </div>
+              <button
+                class="secondary"
+                (click)="export('xlsx', view() === 'alerts' ? 'diagnostics' : 'inventory')"
+              >
+                Export Excel
+              </button>
+            </div>
+            <div class="filters">
+              <input
+                aria-label="Search meters"
+                placeholder="Search meter serial…"
+                [(ngModel)]="query"
+                (keyup.enter)="filter()"
+              /><select aria-label="Meter status" [(ngModel)]="status">
+                <option value="">All statuses</option>
+                @for (st of ['online', 'degraded', 'offline', 'unknown']; track st) {
+                  <option [value]="st">{{ st | titlecase }}</option>
+                }</select
+              ><select aria-label="Sector" [(ngModel)]="sector">
+                <option value="">All sectors</option>
+                @for (sc of catalog().sectors; track sc.id) {
+                  <option [value]="sc.id">{{ sc.name }}</option>
+                }</select
+              ><input
+                class="rssi-input"
+                type="number"
+                aria-label="RSSI below"
+                placeholder="RSSI below (dBm)"
+                [(ngModel)]="rssi"
+              /><button mat-flat-button (click)="filter()">Apply filters</button>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Meter serial</th>
+                    <th>Status</th>
+                    <th>RSSI (dBm)</th>
+                    <th>Neighbors</th>
+                    <th>Hops</th>
+                    <th>Packet delivery</th>
+                    <th>Read success</th>
+                    <th>Last communication (UTC)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (n of meters(); track n.meter.id) {
+                    @if (view() === 'meters' || n.status !== 'online') {
+                      <tr class="clickable" (click)="select(n.meter)">
+                        <td>
+                          <button class="text-button">{{ n.meter.serial }}</button
+                          ><small class="table-sub">Node {{ n.meter.nodeAddress }}</small>
+                        </td>
+                        <td>
+                          <span [class]="'badge ' + n.status"
+                            ><i [class]="'dot ' + n.status"></i>{{ n.status }}</span
+                          >
+                        </td>
+                        <td [class.warning]="n.meter.rssi !== null && n.meter.rssi < -90">
+                          {{ number(n.meter.rssi) }}
+                        </td>
+                        <td>{{ n.meter.neighbors }}</td>
+                        <td>{{ n.meter.hopCount ?? '—' }}</td>
+                        <td>{{ percent(n.meter.pdr) }}</td>
+                        <td>{{ percent(n.meter.readSuccess) }}</td>
+                        <td>{{ n.meter.lastCommunication | date: 'dd MMM, HH:mm' : 'UTC' }}</td>
+                      </tr>
+                    }
+                  } @empty {
+                    <tr>
+                      <td colspan="8" class="empty">
+                        No meters match these filters. Adjust the filters and try again.
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </section>
+        }
+        @if (view() === 'profiles') {
+          <section class="panel">
+            <div class="panel-heading">
+              <div>
+                <h2>DLMS / COSEM profile explorer</h2>
+                <p>
+                  Configurable capture objects. Simulated readings; no physical protocol connection.
+                </p>
+              </div>
+              <button class="secondary" (click)="export('xlsx', 'profiles')">Export profile</button>
+            </div>
+            <div class="profile-tabs">
+              @for (p of catalog().profiles; track p.key) {
+                <button [class.active]="profile === p.key" (click)="profile = p.key; loadProfile()">
+                  {{ p.name | titlecase }}
+                </button>
+              }
+            </div>
+            <div class="filters">
+              <label>Meter<input [(ngModel)]="meterSerial" placeholder="MM-0012" /></label
+              ><label>From (UTC)<input type="datetime-local" [(ngModel)]="from" /></label
+              ><label>To (UTC)<input type="datetime-local" [(ngModel)]="to" /></label
+              ><button mat-flat-button (click)="loadProfile()">Load profile</button>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Timestamp (UTC)</th>
+                    @if (profile.endsWith('events')) {
+                      <th>Event code</th>
+                      <th>Description</th>
+                    } @else {
+                      <th>Voltage (V)</th>
+                      <th>Current (A)</th>
+                      <th>Active power (kW)</th>
+                      <th>Cumulative (kWh)</th>
+                      <th>Interval (kWh)</th>
+                      <th>Quality</th>
+                    }
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (row of profileRows(); track row.timestamp) {
+                    <tr>
+                      <td>{{ row.timestamp | date: 'dd MMM yyyy, HH:mm' : 'UTC' }}</td>
+                      @if (profile.endsWith('events')) {
+                        <td>{{ row.code }}</td>
+                        <td>{{ row.description }}</td>
+                      } @else {
+                        <td>{{ number(row.voltage) }}</td>
+                        <td>{{ number(row.currentA, 3) }}</td>
+                        <td>{{ number(row.activePowerKw, 3) }}</td>
+                        <td>{{ number(row.cumulativeKwh, 3) }}</td>
+                        <td>{{ number(row.intervalKwh, 4) }}</td>
+                        <td>{{ row.quality }}</td>
+                      }
+                    </tr>
+                  } @empty {
+                    <tr>
+                      <td colspan="8" class="empty">No profile records in this time range.</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </section>
+        }
+        @if (view() === 'gateways') {
+          <div class="gateway-grid">
+            @for (g of gateways(); track g.gateway.id) {
+              <section class="panel gateway-card">
+                <span class="gateway-icon">▣</span
+                ><span class="badge online">{{ g.gateway.online ? 'Online' : 'Offline' }}</span>
+                <h2>{{ g.gateway.name }}</h2>
+                <p>Gateway and associated sink monitoring</p>
+                <dl>
+                  <dt>Associated meters</dt>
+                  <dd>{{ g.meters }}</dd>
+                  <dt>Read success</dt>
+                  <dd>{{ percent(g.readSuccess) }}</dd>
+                </dl>
+                <button class="secondary" (click)="affected(g.gateway.id)">
+                  Inspect failure impact
+                </button>
+              </section>
+            }
+          </div>
+        }
+        @if (view() === 'incidents') {
+          <section class="panel">
+            <div class="panel-heading">
+              <div>
+                <h2>Incident management</h2>
+                <p>Investigate, track and resolve observed issues.</p>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Incident</th>
+                    <th>Severity</th>
+                    <th>Status</th>
+                    <th>Detected (UTC)</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (i of incidents(); track i.id) {
+                    <tr>
+                      <td class="strong">{{ i.title }}</td>
+                      <td>
+                        <span [class]="'badge ' + i.severity">{{ i.severity }}</span>
+                      </td>
+                      <td>{{ i.status }}</td>
+                      <td>{{ i.timestamp | date: 'medium' : 'UTC' }}</td>
+                      <td>
+                        <button class="text-button" (click)="incident(i, 'investigating')">
+                          Investigate</button
+                        ><button class="text-button" (click)="incident(i, 'resolved')">
+                          Resolve
+                        </button>
+                      </td>
+                    </tr>
+                  } @empty {
+                    <tr>
+                      <td colspan="5" class="empty">No incidents recorded.</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </section>
+          <section class="panel">
+            <div class="panel-heading">
+              <div>
+                <h2>Proposed work orders</h2>
+                <p>
+                  Approval records intent for review. Dispatch requires a separate human process.
+                </p>
+              </div>
+            </div>
+            @for (w of workOrders(); track w.id) {
+              <div class="work-order">
+                <span>{{ w.description }}</span
+                ><span class="badge">{{ w.status }}</span
+                ><button class="secondary" [disabled]="w.humanApproved" (click)="approve(w.id)">
+                  Approve for review
+                </button>
+              </div>
+            } @empty {
+              <p class="empty">No work orders proposed.</p>
+            }
+          </section>
+        }
+        @if (view() === 'reports') {
+          <section class="panel">
+            <div class="panel-heading">
+              <div>
+                <h2>Reports center</h2>
+                <p>Authorized downloads expire after 24 hours. Exports run in the backend.</p>
+              </div>
+              <button class="secondary" (click)="refreshReports()">Refresh jobs</button>
+            </div>
+            <div class="report-actions">
+              @for (
+                kind of ['inventory', 'weak-signal', 'offline', 'diagnostics', 'incidents'];
+                track kind
+              ) {
+                <div>
+                  <b>{{ kind | titlecase }}</b
+                  ><button (click)="export('xlsx', kind)">Excel</button
+                  ><button (click)="export('csv', kind)">CSV</button
+                  ><button (click)="export('txt', kind)">Text</button>
+                </div>
+              }
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Report</th>
+                    <th>Format</th>
+                    <th>Status</th>
+                    <th>Generated (UTC)</th>
+                    <th>Download</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (r of reports(); track r.id) {
+                    <tr>
+                      <td>
+                        {{ r.kind | titlecase }}<small class="table-sub">{{ r.error }}</small>
+                      </td>
+                      <td>{{ r.format | uppercase }}</td>
+                      <td>
+                        <span class="badge">{{ r.status }}</span>
+                      </td>
+                      <td>{{ r.timestamp | date: 'medium' : 'UTC' }}</td>
+                      <td>
+                        <button
+                          class="text-button"
+                          [disabled]="r.status !== 'complete'"
+                          (click)="download(r)"
+                        >
+                          Download {{ r.format | uppercase }}
+                        </button>
+                      </td>
+                    </tr>
+                  } @empty {
+                    <tr>
+                      <td colspan="5" class="empty">
+                        Your reports will appear here. Choose an export above to get started.
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </section>
+        }
+        @if (view() === 'copilot') {
+          <section class="panel copilot">
+            <div class="copilot-heading">
+              <span class="copilot-symbol">✧</span>
+              <div>
+                <h2>MeterMind Copilot</h2>
+                <p>Grounded in your utility’s database. Every tool call leaves an audit record.</p>
+              </div>
+              <span class="subtle-tag">{{
+                aiConfigured() ? 'Tools enabled' : 'Configuration required'
+              }}</span>
+            </div>
+            @if (!aiConfigured()) {
+              <div class="setup-note">
+                <h3>Connect OpenAI to enable conversations</h3>
+                <p>
+                  Set the API key and a tool-capable model in the server configuration. You can
+                  explore actual network records using the inventory, diagnostics and report pages
+                  now.
+                </p>
+              </div>
+            } @else {
+              @if (messages().length === 0) {
+                <div class="copilot-welcome">
+                  <span>✧</span>
+                  <h2>What would you like to investigate?</h2>
+                  <p>Trace a failure, explore meter readings or turn a query into a report.</p>
+                  <div class="suggestions">
+                    @for (
+                      q of [
+                        'Show meters with RSSI below -90 dBm.',
+                        'Compare meter read success rates across all three gateways.',
+                        'Show meter MM-0012 block load profile for the last seven days.',
+                        'Export all weak-signal meters to Excel.',
+                      ];
+                      track q
+                    ) {
+                      <button (click)="send(q)">{{ q }} <span>↗</span></button>
+                    }
+                  </div>
+                </div>
+              }
+              <div class="chat-history" aria-live="polite">
+                @for (m of messages(); track $index) {
+                  <article [class]="'chat-message ' + m.role">
+                    <strong>{{ m.role === 'user' ? 'You' : 'MeterMind' }}</strong>
+                    <p>{{ m.text }}</p>
+                    @for (t of m.tools; track $index) {
+                      <mm-evidence [name]="t.name" [result]="t.result" />
+                    }
+                  </article>
+                }
+              </div>
+              <form class="chat-input" (ngSubmit)="send()">
+                <input
+                  aria-label="Ask MeterMind"
+                  placeholder="Ask about your meters, network or profiles…"
+                  [(ngModel)]="prompt"
+                  name="prompt"
+                  [disabled]="sending()"
+                /><button mat-flat-button [disabled]="sending() || !prompt.trim()">
+                  {{ sending() ? 'Investigating…' : 'Send ↗' }}
+                </button>
+              </form>
+              <p class="ai-note">
+                AI explanations can be imperfect. Inspect the database evidence before acting.
+              </p>
+            }
+          </section>
+        }
+        @if (view() === 'simulator') {
+          <section class="panel simulator-panel">
+            <div class="panel-heading">
+              <div>
+                <h2>Isolated network simulation</h2>
+                <p>Deterministic historical generation with a persistent continuous worker.</p>
+              </div>
+              <span class="badge">{{ simulation()?.running ? 'Running' : 'Stopped' }}</span>
+            </div>
+            <div class="sim-facts">
+              <div><strong>300</strong><span>Unique meters</span></div>
+              <div><strong>1 km</strong><span>Deployment radius</span></div>
+              <div><strong>30 days</strong><span>Default history</span></div>
+              <div><strong>3,897,300</strong><span>Default baseline records</span></div>
+            </div>
+            <p>
+              Network telemetry: 5 min · Instantaneous: 15 min · Block load: 30 min · Daily load: 24
+              h · Billing: one snapshot.
+            </p>
+            <p>
+              Simulation seed: {{ simulation()?.seed }}. Data clock:
+              {{ simulation()?.clock | date: 'medium' : 'UTC' }} UTC.
+            </p>
+            <div class="filters">
+              <label
+                >Controlled cause<select [(ngModel)]="scenarioCause">
+                  @for (
+                    cause of [
+                      'weak-signal',
+                      'coverage-gap',
+                      'antenna',
+                      'congestion',
+                      'routing-instability',
+                      'gateway',
+                      'firmware',
+                      'power',
+                      'dlms',
+                    ];
+                    track cause
+                  ) {
+                    <option [value]="cause">{{ cause | titlecase }}</option>
+                  }
+                </select></label
+              ><label>Target meter<input [(ngModel)]="scenarioMeter" /></label
+              ><button class="secondary" (click)="scenario()">Apply scenario</button>
+            </div>
+            <div class="sim-controls">
+              <button mat-flat-button (click)="simulate('start')">Start simulation</button
+              ><button class="secondary" (click)="simulate('stop')">Stop simulation</button
+              ><button class="danger-button" (click)="simulate('reset')">
+                Reset isolated demo
+              </button>
+            </div>
+            <p class="muted">
+              The separate worker advances the data clock every five minutes while running. Reset
+              regenerates only this demo utility. Physical meter writes are disabled.
+            </p>
+          </section>
+        }
+        @if (view() === 'settings') {
+          <section class="panel settings-panel">
+            <h2>Identity & access</h2>
+            <p>Roles and accounts are managed by the configured identity provider.</p>
+            <dl>
+              <dt>Signed-in user</dt>
+              <dd>{{ settings()?.userId }}</dd>
+              <dt>Utility</dt>
+              <dd>{{ settings()?.utilityId }}</dd>
+              <dt>Operations access</dt>
+              <dd>{{ settings()?.canOperate ? 'Granted' : 'Read only' }}</dd>
+              <dt>Physical writes</dt>
+              <dd>Disabled</dd>
+            </dl>
+            <h3>Supported roles</h3>
+            <div class="role-list">
+              @for (role of settings()?.roles; track role) {
+                <span class="badge">{{ role }}</span>
+              }
+            </div>
+            <h3>Update access token</h3>
+            <label
+              >Identity provider access token<input
+                type="password"
+                [(ngModel)]="tokenInput"
+                autocomplete="off" /></label
+            ><button mat-flat-button (click)="signIn()">Update session</button>
+          </section>
+        }
+      }
+      <footer class="page-footer">
+        <span
+          >MeterMind <span class="footer-divider">/</span> Network intelligence for utilities</span
+        ><span
+          >All times UTC <span class="footer-divider">·</span>
+          {{ summary()?.queryTime | date: 'HH:mm:ss' : 'UTC' }} query time</span
+        >
+      </footer>
+    </main>
+  </div>
+</div>
+@if (selected(); as m) {
+  <div class="drawer-backdrop" (click)="selected.set(null)"></div>
+  <aside
+    class="meter-drawer"
+    cdkTrapFocus
+    [cdkTrapFocusAutoCapture]="true"
+    (keydown.escape)="selected.set(null)"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-label]="'Meter ' + m.serial"
+  >
+    <div class="drawer-heading">
+      <div>
+        <p>Meter details</p>
+        <h2>{{ m.serial }}</h2>
+      </div>
+      <button class="icon-button" aria-label="Close meter details" (click)="selected.set(null)">
+        ×
+      </button>
+    </div>
+    <span class="simulation-pill">Simulation data</span>
+    <dl class="meter-facts">
+      <dt>Node address</dt>
+      <dd>{{ m.nodeAddress }}</dd>
+      <dt>RSSI</dt>
+      <dd>{{ number(m.rssi) }} dBm</dd>
+      <dt>Neighbors / hops</dt>
+      <dd>{{ m.neighbors }} / {{ m.hopCount ?? '—' }}</dd>
+      <dt>Packet delivery</dt>
+      <dd>{{ percent(m.pdr) }}</dd>
+      <dt>Read success</dt>
+      <dd>{{ percent(m.readSuccess) }}</dd>
+      <dt>Firmware</dt>
+      <dd>{{ m.firmware }}</dd>
+      <dt>Coordinates</dt>
+      <dd>{{ m.latitude | number: '1.4-4' }}, {{ m.longitude | number: '1.4-4' }}</dd>
+      <dt>Next hop</dt>
+      <dd class="small-id">{{ m.nextHopId ?? 'No observed route' }}</dd>
+    </dl>
+    <button class="secondary" (click)="affected(m.id)">Find downstream meters</button>
+    <h3>Routing path</h3>
+    <p class="muted">{{ routingPath() }}</p>
+    <div class="profile-tabs">
+      @for (tab of ['health', 'neighbors', 'routing', 'communication']; track tab) {
+        <button [class.active]="drawerTab === tab" (click)="drawerTab = tab">
+          {{ tab | titlecase }}
+        </button>
+      }
+    </div>
+    @if (drawerTab === 'neighbors') {
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Neighbor</th>
+              <th>Distance m</th>
+              <th>RSSI dBm</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (n of neighborRows(); track n.neighborId) {
+              <tr>
+                <td>{{ nodeName(n.neighborId) }}</td>
+                <td>{{ number(n.distanceM) }}</td>
+                <td>{{ number(n.rssi) }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+    @if (drawerTab === 'routing') {
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Timestamp UTC</th>
+              <th>Next hop</th>
+              <th>Hops</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (r of routeRows(); track r.timestamp) {
+              <tr>
+                <td>{{ r.timestamp | date: 'dd MMM HH:mm' : 'UTC' }}</td>
+                <td>{{ nodeName(r.nextHopId) }}</td>
+                <td>{{ r.hopCount ?? '—' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+    @if (drawerTab === 'communication') {
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Timestamp UTC</th>
+              <th>Profile</th>
+              <th>Result</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (c of communicationRows(); track $index) {
+              <tr>
+                <td>{{ c.timestamp | date: 'dd MMM HH:mm' : 'UTC' }}</td>
+                <td>{{ c.profile }}</td>
+                <td>{{ c.success ? 'Success' : c.error }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+    @if (drawerTab === 'health') {
+      <h3>Diagnostic findings</h3>
+      @for (f of findings(); track f.rule) {
+        <section class="finding">
+          <span class="badge">{{ f.evidenceQuality }}</span>
+          <h4>{{ f.conclusion }}</h4>
+          @for (e of f.evidence; track e) {
+            <p>{{ e }}</p>
+          }
+          <p><b>Suggested action:</b> {{ f.actions.join('; ') }}</p>
+          <small>Alternatives: {{ f.alternatives.join('; ') }}</small>
+        </section>
+      } @empty {
+        <p class="muted">No diagnostic rule triggered, or evidence is still loading.</p>
+      }
+    }
+    <button
+      mat-flat-button
+      (click)="meterSerial = m.serial; selected.set(null); router.navigate(['/profiles'])"
+    >
+      Explore DLMS profiles
+    </button>
+  </aside>
+}

@@ -1,0 +1,77 @@
+@use '@angular/material' as mat;
+@import 'maplibre-gl/dist/maplibre-gl.css';
+html {
+  @include mat.theme(
+    (
+      color: (
+        primary: mat.$cyan-palette,
+      ),
+      typography: 'Segoe UI',
+      density: -3,
+    )
+  );
+}
+:root {
+  --mat-sys-primary: #008f83;
+  --mat-sys-on-primary: #fff;
+  --mat-sys-corner-full: 5px;
+  --mat-sys-label-large-size: 11px;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background: #f4f7f9;
+  color: #193847;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+button,
+a,
+input,
+select {
+  touch-action: manipulation;
+}
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid #008f83;
+  outline-offset: 3px;
+}
+.dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #8da2ad;
+}
+.dot.online,
+.bar .online {
+  background: #16a34a;
+}
+.dot.degraded,
+.bar .degraded {
+  background: #e9a23b;
+}
+.dot.offline,
+.bar .offline {
+  background: #64748b;
+}
+.dot.unknown,
+.bar .unknown {
+  background: #a3b0b8;
+}
+.mat-mdc-unelevated-button {
+  border-radius: 5px !important;
+  font-size: 11px !important;
+  letter-spacing: 0 !important;
+  min-height: 34px !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+app-root .panel-heading p,app-root .page-heading p,app-root .metric small,app-root .context-label,app-root th,app-root .panel-footer,app-root .page-footer,app-root .table-sub{color:#5c7481}

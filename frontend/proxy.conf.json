@@ -1,0 +1,1 @@
+{"/api":{"target":"http://127.0.0.1:5080","secure":false},"/auth":{"target":"http://127.0.0.1:5080","secure":false},"/hubs":{"target":"http://127.0.0.1:5080","secure":false,"ws":true},"/health":{"target":"http://127.0.0.1:5080","secure":false}}
