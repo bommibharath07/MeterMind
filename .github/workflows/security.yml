@@ -1,0 +1,34 @@
+name: Security
+on:
+  pull_request:
+  push:
+    branches: [main, master]
+  schedule:
+    - cron: '15 3 * * 1'
+permissions:
+  contents: read
+jobs:
+  dependencies:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: ./.github/actions/setup
+      - run: dotnet restore --locked-mode
+      - run: dotnet package list --include-transitive --vulnerable --format json > /tmp/nuget-audit.json
+      - run: python scripts/check-nuget-audit.py /tmp/nuget-audit.json
+      - run: npm ci && npm audit --audit-level=high
+        working-directory: frontend
+  codeql:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: ./.github/actions/setup
+      - uses: github/codeql-action/init@915412ff23e8b7659517e607487dbeae018f2934
+        with:
+          languages: csharp,javascript-typescript
+      - run: dotnet build MeterMind.slnx
+      - uses: github/codeql-action/analyze@915412ff23e8b7659517e607487dbeae018f2934

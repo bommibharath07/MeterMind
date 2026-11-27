@@ -1,0 +1,61 @@
+name: CI
+on:
+  pull_request:
+  push:
+    branches: [main, master, 'codex/**']
+  workflow_call:
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    services:
+      postgres:
+        image: postgres:18.1
+        env:
+          POSTGRES_DB: metermind_test
+          POSTGRES_USER: metermind
+          POSTGRES_PASSWORD: test-only-password
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd 'pg_isready -U metermind -d metermind_test'
+          --health-interval 5s --health-retries 20
+    env:
+      METERMIND_TEST_CONNECTION: Host=127.0.0.1;Database=metermind_test;Username=metermind;Password=test-only-password
+      ConnectionStrings__MeterDb: Host=127.0.0.1;Database=metermind_test;Username=metermind;Password=test-only-password
+      METERMIND_FULL_SEED: '1'
+      ASPNETCORE_ENVIRONMENT: Development
+      DOTNET_ENVIRONMENT: Development
+      DemoAuth: 'true'
+      Simulation__Enabled: 'true'
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: ./.github/actions/setup
+      - run: dotnet restore MeterMind.slnx --locked-mode
+      - run: dotnet test MeterMind.slnx --no-restore --logger 'trx;LogFileName=results.trx'
+      - run: dotnet tool restore
+      - run: dotnet ef migrations script --idempotent --project src/MeterMind.Persistence --startup-project src/MeterMind.MigrationJob --output /tmp/migrations.sql
+      - run: python scripts/check-migration.py /tmp/migrations.sql
+      - run: npm ci && npm test && npm run build
+        working-directory: frontend
+      - run: npx playwright install --with-deps chromium
+        working-directory: frontend
+      - name: Browser acceptance against database-backed API
+        shell: bash
+        run: |
+          dotnet run --no-build --project src/MeterMind.API --urls http://127.0.0.1:5080 > /tmp/api.log 2>&1 &
+          npm --prefix frontend start -- --host 127.0.0.1 > /tmp/ui.log 2>&1 &
+          trap 'kill $(jobs -pr) || true' EXIT
+          for i in {1..60}; do if curl -fsS http://127.0.0.1:4200/ >/dev/null; then break; fi; sleep 2; done
+          npm --prefix frontend run test:e2e
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: test-evidence
+          path: |
+            **/TestResults/*.trx
+            frontend/playwright-report/

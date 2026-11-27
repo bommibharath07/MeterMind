@@ -1,0 +1,18 @@
+name: database-migrations
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        type: choice
+        options: [staging, production]
+        default: staging
+permissions:
+  contents: read
+  id-token: write
+jobs:
+  run:
+    uses: ./.github/workflows/_cloud-job.yml
+    with:
+      environment: ${{ inputs.environment }}
+      job: migration
+    secrets: inherit

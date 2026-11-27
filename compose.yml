@@ -1,0 +1,55 @@
+name: metermind
+x-backend: &backend
+  ConnectionStrings__MeterDb: Host=db;Database=metermind;Username=metermind;Password=${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+  ASPNETCORE_ENVIRONMENT: Development
+  DOTNET_ENVIRONMENT: Development
+  DemoAuth: 'true'
+  Simulation__Enabled: 'true'
+  OpenAI__ApiKey: ${OPENAI_API_KEY:-}
+  OpenAI__Model: ${OPENAI_MODEL:-}
+services:
+  db:
+    image: postgres:18.1
+    environment:
+      POSTGRES_DB: metermind
+      POSTGRES_USER: metermind
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    volumes: [postgres-data:/var/lib/postgresql]
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U metermind -d metermind']
+      interval: 5s
+      retries: 20
+  migration:
+    build: {context: ., args: {PROJECT: MigrationJob}}
+    environment: *backend
+    depends_on: {db: {condition: service_healthy}}
+    restart: 'no'
+  simulator:
+    build: {context: ., args: {PROJECT: Simulator}}
+    environment: *backend
+    depends_on: {migration: {condition: service_completed_successfully}}
+    restart: 'no'
+  api:
+    build: {context: ., args: {PROJECT: API}}
+    environment: *backend
+    depends_on: {simulator: {condition: service_completed_successfully}}
+    ports: ['127.0.0.1:5080:8080']
+  worker:
+    build: {context: ., args: {PROJECT: Worker}}
+    environment: *backend
+    depends_on: {simulator: {condition: service_completed_successfully}}
+  mcp:
+    build: {context: ., args: {PROJECT: McpServer}}
+    environment:
+      <<: *backend
+      Auth__Authority: ${AUTH_AUTHORITY:-https://login.microsoftonline.com/replace-tenant/v2.0}
+      Auth__Audience: ${AUTH_AUDIENCE:-metermind}
+      DemoAuth: 'false'
+    depends_on: {simulator: {condition: service_completed_successfully}}
+    ports: ['127.0.0.1:5081:8080']
+  frontend:
+    build: frontend
+    depends_on: [api]
+    ports: ['127.0.0.1:4200:8080']
+volumes:
+  postgres-data:

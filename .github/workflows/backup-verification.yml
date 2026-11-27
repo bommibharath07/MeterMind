@@ -1,0 +1,27 @@
+name: Backup restore verification
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 4 * * 0'
+permissions:
+  contents: read
+  id-token: write
+jobs:
+  restore:
+    runs-on: [self-hosted, linux, metermind-private]
+    environment: staging
+    timeout-minutes: 180
+    concurrency: backup-staging
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: azure/login@7184910d9eb2b1c5e48f7073824a90609bb9b6d6 # v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - env:
+          MM_RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
+          MM_POSTGRES_SERVER: ${{ vars.POSTGRES_SERVER }}
+          MM_POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          MM_STORAGE_ACCOUNT: ${{ vars.STORAGE_ACCOUNT }}
+        run: bash scripts/verify-backup.sh

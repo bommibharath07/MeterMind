@@ -1,0 +1,16 @@
+name: Deploy production
+on:
+  workflow_dispatch:
+    inputs:
+      manifest_run_id: {description: Successful image-build run ID for this commit, required: true, type: string}
+permissions:
+  contents: read
+  actions: read
+  id-token: write
+jobs:
+  deploy:
+    uses: ./.github/workflows/_deploy.yml
+    with:
+      environment: production
+      manifest_run_id: ${{ inputs.manifest_run_id }}
+    secrets: inherit

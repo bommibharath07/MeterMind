@@ -1,0 +1,32 @@
+name: Application rollback
+on:
+  workflow_dispatch:
+    inputs:
+      environment: {type: choice, options: [staging, production], default: staging}
+      previous_run_id: {required: true, type: string, description: Image build run for a previously compatible release}
+permissions:
+  contents: read
+  actions: read
+  id-token: write
+jobs:
+  rollback:
+    runs-on: [self-hosted, linux, metermind-private]
+    environment: ${{ inputs.environment }}
+    concurrency: metermind-${{ inputs.environment }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: release-manifest
+          run-id: ${{ inputs.previous_run_id }}
+          github-token: ${{ github.token }}
+      - uses: azure/login@7184910d9eb2b1c5e48f7073824a90609bb9b6d6 # v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - env:
+          MM_ENVIRONMENT: ${{ inputs.environment }}
+          MM_RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
+          MM_SMOKE_TOKEN: ${{ secrets.SMOKE_ACCESS_TOKEN }}
+        run: bash scripts/rollback.sh
